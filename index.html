@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Phenotype Disease Image Database - Research Repository</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Georgia', 'Times New Roman', serif;
+      background: #f5f7fa;
+      color: #2c3e50;
+      line-height: 1.6;
+    }
+
+    .header {
+      background: linear-gradient(to right, #1e3c72, #2a5298);
+      color: white;
+      padding: 40px 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .header-content { max-width: 1400px; margin: 0 auto; }
+    .header h1 { font-size: 2.2em; font-weight: 400; margin-bottom: 10px; }
+
+    .container {
+      max-width: 1400px;
+      margin: 30px auto;
+      background: white;
+      box-shadow: 0 0 20px rgba(0,0,0,0.08);
+      border-radius: 2px;
+    }
+
+    .filter-section {
+      background: #ffffff;
+      padding: 35px;
+      border-bottom: 3px solid #e8eef5;
+    }
+
+    .section-title {
+      font-size: 1.4em;
+      color: #1e3c72;
+      margin-bottom: 25px;
+      border-bottom: 2px solid #2a5298;
+      padding-bottom: 10px;
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 25px;
+      margin-bottom: 25px;
+    }
+
+    .filter-group { display: flex; flex-direction: column; }
+    .filter-group label { font-weight: 600; color: #34495e; margin-bottom: 8px; font-size: 0.9em; text-transform: uppercase; }
+
+    .filter-group select, .filter-group input {
+      padding: 10px 12px;
+      border: 1.5px solid #bdc3c7;
+      border-radius: 2px;
+      font-size: 0.95em;
+      background: white;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .filter-group select:focus, .filter-group input:focus {
+      outline: none;
+      border-color: #2a5298;
+      box-shadow: 0 0 0 2px rgba(42,82,152,0.1);
+    }
+
+    .button-group {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+
+    button {
+      padding: 11px 28px;
+      border: none;
+      border-radius: 2px;
+      font-size: 0.95em;
+      font-weight: 600;
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+
+    .btn-primary { background: #2a5298; color: white; }
+    .btn-primary:hover { background: #1e3c72; box-shadow: 0 2px 8px rgba(42,82,152,0.3); }
+    .btn-secondary { background: #95a5a6; color: white; }
+    .btn-secondary:hover { background: #7f8c8d; }
+
+    .stats-bar {
+      background: #ecf0f1;
+      padding: 18px 35px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #bdc3c7;
+    }
+
+    .stats-text { font-size: 1em; color: #2c3e50; font-weight: 500; }
+    .stats-text .number { font-weight: 700; color: #1e3c72; }
+    .btn-download { background: #27ae60; color: white; padding: 10px 24px; }
+    .btn-download:hover { background: #229954; }
+
+    .gallery {
+      padding: 35px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 30px;
+    }
+
+    .image-card {
+      background: white;
+      border: 1px solid #dce1e8;
+      border-radius: 2px;
+      overflow: hidden;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+
+    .image-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+      transform: translateY(-3px);
+      border-color: #2a5298;
+    }
+
+    .image-info { padding: 18px; background: #fafbfc; }
+    .image-id { font-size: 1.05em; font-weight: 600; color: #1e3c72; margin-bottom: 12px; }
+
+    .metadata-table { width: 100%; font-size: 0.85em; }
+    .metadata-table tr { border-bottom: 1px solid #ecf0f1; }
+    .metadata-table td { padding: 6px 0; }
+    .metadata-table .label { font-weight: 600; color: #7f8c8d; text-transform: uppercase; width: 40%; font-size: 0.8em; }
+
+    .no-results { text-align: center; padding: 80px 20px; color: #7f8c8d; }
+    .no-results-title { font-size: 1.5em; color: #34495e; margin-bottom: 15px; }
+
+    .modal {
+      display: none; position: fixed; z-index: 1000;
+      left: 0; top: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85);
+      align-items: center; justify-content: center;
+    }
+
+    .modal-content {
+      background: white; max-width: 800px; max-height: 90vh;
+      overflow-y: auto; border-radius: 2px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3); position: relative;
+    }
+
+    .modal-header { background: #1e3c72; color: white; padding: 25px 30px; border-bottom: 3px solid #2a5298; }
+    .modal-header h2 { font-size: 1.8em; }
+    .modal-body { padding: 35px; }
+
+    .detail-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    .detail-table tr { border-bottom: 1px solid #ecf0f1; }
+    .detail-table td { padding: 15px 10px; }
+    .detail-table .detail-label { font-weight: 600; color: #34495e; text-transform: uppercase; width: 35%; }
+
+    .close-modal {
+      position: absolute; top: 25px; right: 30px;
+      color: white; font-size: 35px; cursor: pointer;
+      width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+    }
+
+    .footer {
+      background: #2c3e50; color: white; text-align: center;
+      padding: 30px 20px; margin-top: 50px; font-size: 0.9em;
+    }
+    .footer a { color: #3498db; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-content">
+      <h1>Phenotype Disease Image Database</h1>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="filter-section">
+      <h2 class="section-title">Search & Filter</h2>
+      <div class="filters">
+        <div class="filter-group">
+          <label for="disease">Disease Type</label>
+          <select id="disease">
+            <option value="">All Types</option>
+            <option value="cornelia de lange syndrome">Cornelia de Lange Syndrome</option>
+            <option value="turner syndrome">Turner Syndrome</option>
+            <option value="williams syndrome">Williams Syndrome</option>
+            <option value="noonan syndrome">Noonan Syndrome</option>
+            <option value="kabuki syndrome">Kabuki Syndrome</option>
+            <option value="kbg syndrome">KBG Syndrome</option>
+            <option value="angelman syndrome">Angelman Syndrome</option>
+            <option value="smith-magenis syndrome">Smith-Magenis Syndrome</option>
+            <option value="rubinstein-taybi syndrome">Rubinstein-Taybi Syndrome</option>
+            <option value="nicolaides-baraitser syndrome">Nicolaides-Baraitser Syndrome</option>
+            <option value="22q11.2 deletion syndrome">22q11.2 Deletion Syndrome</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="age">Age Range (Years)</label>
+          <select id="age">
+            <option value="">All Ages</option>
+            <option value="0-2">0-2</option>
+            <option value="3-6">3-6</option>
+            <option value="7-9">7-9</option>
+            <option value="10-14">10-14</option>
+            <option value="15-19">15-19</option>
+            <option value="20+">20+</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="gender">Gender</label>
+          <select id="gender">
+            <option value="">All Genders</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="ethnicity">Ethnicity</label>
+          <select id="ethnicity">
+            <option value="">All Ethnicities</option>
+            <option value="caucasian">Caucasian</option>
+            <option value="african">African American</option>
+            <option value="asian">Asian</option>
+            <option value="hispanic">Hispanic/Latino</option>
+            <option value="mixed">Mixed</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="search">Search by ID</label>
+          <input type="text" id="search" placeholder="Enter image ID...">
+        </div>
+      </div>
+
+      <div class="button-group">
+        <button class="btn-secondary" onclick="resetFilters()">Reset Filters</button>
+        <button class="btn-primary" onclick="applyFilters()">Apply Filters</button>
+      </div>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stats-text">
+        Displaying <span class="number" id="result-count">0</span> of <span class="number" id="total-count">0</span> images
+      </div>
+      <button class="btn-download" onclick="downloadMetadata()">Download Metadata (CSV)</button>
+    </div>
+
+    <div id="gallery" class="gallery"></div>
+  </div>
+
+  <div class="footer">
+    <p>&copy; 2024 Wang Genomics Lab, Children's Hospital of Philadelphia. All rights reserved.</p>
+    <p>For research inquiries, please contact: <a href="">email</a></p>
+    <p>This database contains synthetic images generated using StyleGAN3 for research purposes only.</p>
+  </div>
+
+  <div id="modal" class="modal" onclick="closeModal()">
+    <span class="close-modal">&times;</span>
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h2 id="modal-title">Image Details</h2>
+      </div>
+      <div class="modal-body" id="modal-details"></div>
+    </div>
+  </div>
+
+  <script>
+    // ===== 数据（不含 severity）=====
+    const imageDatabase = [
+      { id: "SYN_CdLS_001", disease: "cornelia de lange syndrome", diseaseName: "Cornelia de Lange Syndrome", age: "3-6", gender: "male", ethnicity: "hispanic" },
+      { id: "SYN_CdLS_002", disease: "cornelia de lange syndrome", diseaseName: "Cornelia de Lange Syndrome", age: "7-9", gender: "female", ethnicity: "caucasian" },
+      { id: "SYN_CdLS_003", disease: "cornelia de lange syndrome", diseaseName: "Cornelia de Lange Syndrome", age: "3-6", gender: "male", ethnicity: "hispanic" },
+      { id: "SYN_CdLS_004", disease: "cornelia de lange syndrome", diseaseName: "Cornelia de Lange Syndrome", age: "3-6", gender: "female", ethnicity: "hispanic" },
+      { id: "SYN_CdLS_005", disease: "cornelia de lange syndrome", diseaseName: "Cornelia de Lange Syndrome", age: "7-9", gender: "female", ethnicity: "caucasian" }
+    ];
+
+    // 当前筛选状态（无 severity）
+    let currentFilters = { disease:"", age:"", gender:"", ethnicity:"", search:"" };
+
+    // 初始化
+    function init() {
+      displayImages(imageDatabase);
+      updateStats(imageDatabase.length, imageDatabase.length);
+    }
+
+    function formatLabel(str) {
+      if (!str) return "—";
+      return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    // 渲染图片卡片
+    function displayImages(images) {
+      const gallery = document.getElementById("gallery");
+      if (images.length === 0) {
+        gallery.innerHTML = `
+          <div class="no-results">
+            <div class="no-results-title">No Results Found</div>
+            <p>No images match your current filter criteria. Please adjust your filters and try again.</p>
+          </div>`;
+        return;
+      }
+      gallery.innerHTML = images.map(img => `
+        <div class="image-card" onclick="showModal('${img.id}')">
+          <img src="images/${img.id}.png" alt="${img.id}"
+            style="width: 100%; height: 280px; object-fit: cover; border-bottom: 1px solid #dce1e8;"
+            onerror="this.onerror=null; this.src='images/placeholder.png';" />
+          <div class="image-info">
+            <div class="image-id">${img.id}</div>
+            <table class="metadata-table">
+              <tr><td class="label">Disease:</td><td class="value">${img.diseaseName}</td></tr>
+              <tr><td class="label">Age:</td><td class="value">${img.age} years</td></tr>
+              <tr><td class="label">Gender:</td><td class="value">${formatLabel(img.gender)}</td></tr>
+              <tr><td class="label">Ethnicity:</td><td class="value">${formatLabel(img.ethnicity)}</td></tr>
+            </table>
+          </div>
+        </div>`).join("");
+    }
+
+    // 应用筛选
+    function applyFilters() {
+      currentFilters = {
+        disease: document.getElementById("disease").value,
+        age: document.getElementById("age").value,
+        gender: document.getElementById("gender").value,
+        ethnicity: document.getElementById("ethnicity").value,
+        search: document.getElementById("search").value.toLowerCase()
+      };
+      const filtered = imageDatabase.filter(img => {
+        if (currentFilters.disease && img.disease !== currentFilters.disease) return false;
+        if (currentFilters.age && img.age !== currentFilters.age) return false;
+        if (currentFilters.gender && img.gender !== currentFilters.gender) return false;
+        if (currentFilters.ethnicity && img.ethnicity !== currentFilters.ethnicity) return false;
+        if (currentFilters.search && !img.id.toLowerCase().includes(currentFilters.search)) return false;
+        return true;
+      });
+      displayImages(filtered);
+      updateStats(filtered.length, imageDatabase.length);
+    }
+
+    // 重置筛选
+    function resetFilters() {
+      ["disease","age","gender","ethnicity","search"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = "";
+      });
+      currentFilters = { disease:"", age:"", gender:"", ethnicity:"", search:"" };
+      displayImages(imageDatabase);
+      updateStats(imageDatabase.length, imageDatabase.length);
+    }
+
+    // 更新统计
+    function updateStats(shown, total) {
+      document.getElementById("result-count").textContent = shown;
+      document.getElementById("total-count").textContent = total;
+    }
+
+    // 弹窗详情
+    function showModal(imageId) {
+      const img = imageDatabase.find(i => i.id === imageId);
+      if (!img) return;
+      const modal = document.getElementById("modal");
+      const title = document.getElementById("modal-title");
+      const details = document.getElementById("modal-details");
+      title.textContent = `Image Details: ${img.id}`;
+      details.innerHTML = `
+        <img src="images/${img.id}.png" alt="${img.id}"
+          style="width: 100%; height: 400px; object-fit: cover; border: 1px solid #dce1e8; margin-bottom: 30px;"
+          onerror="this.onerror=null; this.src='images/placeholder.png';" />
+        <table class="detail-table">
+          <tr><td class="detail-label">Image ID:</td><td class="detail-value">${img.id}</td></tr>
+          <tr><td class="detail-label">Disease Type:</td><td class="detail-value">${img.diseaseName}</td></tr>
+          <tr><td class="detail-label">Age Range:</td><td class="detail-value">${img.age} years</td></tr>
+          <tr><td class="detail-label">Gender:</td><td class="detail-value">${formatLabel(img.gender)}</td></tr>
+          <tr><td class="detail-label">Ethnicity:</td><td class="detail-value">${formatLabel(img.ethnicity)}</td></tr>
+          <tr><td class="detail-label">Generation Method:</td><td class="detail-value">StyleGAN3</td></tr>
+          <tr><td class="detail-label">Resolution:</td><td class="detail-value">1024 x 1024 pixels</td></tr>
+        </table>
+      `;
+      modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById("modal").style.display = 'none';
+    }
+
+    // 导出 CSV（无 severity 列）
+    function downloadMetadata() {
+      const filtered = imageDatabase.filter(img => {
+        if (currentFilters.disease && img.disease !== currentFilters.disease) return false;
+        if (currentFilters.age && img.age !== currentFilters.age) return false;
+        if (currentFilters.gender && img.gender !== currentFilters.gender) return false;
+        if (currentFilters.ethnicity && img.ethnicity !== currentFilters.ethnicity) return false;
+        if (currentFilters.search && !img.id.toLowerCase().includes(currentFilters.search)) return false;
+        return true;
+      });
+
+      const csv = [
+        ['Image_ID','Disease_Type','Age_Range','Gender','Ethnicity','Generation_Method'],
+        ...filtered.map(img => [
+          img.id, img.diseaseName, img.age, img.gender, img.ethnicity, 'StyleGAN3'
+        ])
+      ].map(row => row.join(',')).join('\n');
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url  = window.URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url; a.download = 'phenotype_database_metadata.csv'; a.click();
+    }
+
+    // 页面加载
+    window.onload = init;
+  </script>
+</body>
+</html>
